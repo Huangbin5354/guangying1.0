@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>光影摄影工作室</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      padding: 15px;
+      touch-action: manipulation; /* 优化触摸体验 */
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 1200px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100vh - 30px);
+    }
+
+    .app-header {
+      height: 70px;
+      background: #1a1a1a;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .app-content {
+      flex-grow: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .hero {
+      width: 100%;
+      height: 300px;
+      background: #333;
+      border-radius: 15px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .hero img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .gallery-img {
+      height: 200px;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .gallery-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .app-tabbar {
+      width: 100%;
+      height: 70px;
+      background: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tab-item {
+      flex: 1;
+      color: #ccc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .tab-item.active {
+      color: #fff;
+    }
+
+    .chat-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background: #e63946;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      cursor: grab;
+      z-index: 10;
+      touch-action: none; /* 禁止触摸时的默认行为（如缩放） */
+      user-select: none; /* 禁止拖动时选中文字 */
+    }
+
+    .chat-btn.dragging {
+      cursor: grabbing;
+      opacity: 0.8;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .chat-window {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 90%;
+      max-width: 500px;
+      height: 0;
+      background: white;
+      transition: height 0.3s;
+      overflow: hidden;
+      border-radius: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      z-index: 11;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-window.open {
+      height: 60%;
+      max-height: 600px;
+    }
+
+    .chat-header {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+      font-weight: bold;
+    }
+
+    .chat-content {
+      flex-grow: 1;
+      padding: 15px;
+      overflow-y: auto;
+    }
+
+    .chat-input {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-top: 1px solid #eee;
+    }
+
+    .chat-input input {
+      flex-grow: 1;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+    }
+
+    .chat-input button {
+      padding: 8px 20px;
+      background: #1a1a1a;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .hero {
+        height: 200px;
+      }
+
+      .gallery-img {
+        height: 150px;
+      }
+
+      .chat-window {
+        width: calc(100% - 40px);
+        right: 10px;
+        left: 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-container">
+    <div class="app-header">光影摄影工作室</div>
+
+    <div class="app-content">
+      <div class="page active" id="home">
+        <h3>欢迎来到光影摄影</h3>
+        <p style="margin: 10px 0; color: #666;">用镜头捕捉生活中的每一束光</p >
+        <div class="hero">
+          < img src="https://picsum.photos/1200/400?random=1" alt="摄影作品">
+        </div>
+        <h4>精选作品</h4>
+        <div class="gallery">
+          <div class="gallery-img">< img src="https://picsum.photos/300/300?random=2" alt="作品1"></div>
+          <div class="gallery-img">< img src="https://picsum.photos/300/300?random=3" alt="作品2"></div>
+          <div class="gallery-img">< img src="https://picsum.photos/300/300?random=4" alt="作品3"></div>
+          <div class="gallery-img">< img src="https://picsum.photos/300/300?random=5" alt="作品4"></div>
+        </div>
+      </div>
+
+      <div class="page" id="service">
+        <h3>我们的服务</h3>
+        <ul style="margin: 15px 0 0 20px;">
+          <li style="margin: 10px 0;">人像摄影</li>
+          <li style="margin: 10px 0;">商业产品拍摄</li>
+          <li style="margin: 10px 0;">婚礼跟拍</li>
+          <li style="margin: 10px 0;">证件照精修</li>
+          <li style="margin: 10px 0;">定制摄影套餐</li>
+        </ul>
+      </div>
+
+      <div class="page" id="mine">
+        <h3>个人中心</h3>
+        <p style="margin: 15px 0;">我的订单</p >
+        <p style="margin: 15px 0;">收藏作品</p >
+        <p style="margin: 15px 0;">关于我们</p >
+        <p style="margin: 15px 0;">联系地址</p >
+      </div>
+
+      <div class="page" id="booking">
+        <h3>预约咨询</h3>
+        <form style="margin-top: 15px;">
+          <div style="margin: 10px 0;">
+            <label>姓名：</label>
+            <input type="text" style="width: 100%; max-width: 300px; padding: 5px; margin-left: 10px;">
+          </div>
+          <div style="margin: 10px 0;">
+            <label>电话：</label>
+            <input type="tel" style="width: 100%; max-width: 300px; padding: 5px; margin-left: 10px;">
+          </div>
+          <div style="margin: 10px 0;">
+            <label>服务类型：</label>
+            <select style="width: 100%; max-width: 300px; padding: 5px; margin-left: 10px;">
+              <option>人像摄影</option>
+              <option>商业拍摄</option>
+              <option>婚礼跟拍</option>
+            </select>
+          </div>
+          <button type="button"
+            style="margin-top: 15px; padding: 8px 20px; background: #1a1a1a; color: white; border: none; border-radius: 5px;">提交预约</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="app-tabbar">
+      <div class="tab-item active" data-page="home">首页</div>
+      <div class="tab-item" data-page="service">服务</div>
+      <div class="tab-item" data-page="mine">我的</div>
+      <div class="tab-item" data-page="booking">预约咨询</div>
+    </div>
+
+    <div class="chat-btn" id="chatToggle">客服</div>
+    <div class="chat-window" id="chatWindow">
+      <div class="chat-header">在线客服</div>
+      <div class="chat-content" id="chatContent">
+        <div style="margin-bottom: 10px; text-align: left;">
+          <span style="background: #eee; padding: 8px 12px; border-radius: 15px;">您好，有什么可以帮您？</span>
+        </div>
+      </div>
+      <div class="chat-input">
+        <input type="text" placeholder="输入消息..." id="msgInput">
+        <button id="sendBtn">发送</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tabItems = document.querySelectorAll('.tab-item');
+    tabItems.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabItems.forEach(item => item.classList.remove('active'));
+        tab.classList.add('active');
+
+        const pageId = tab.getAttribute('data-page');
+        document.querySelectorAll('.page').forEach(page => {
+          page.classList.remove('active');
+        });
+        document.getElementById(pageId).classList.add('active');
+      });
+    });
+
+    const chatToggle = document.getElementById('chatToggle');
+    const chatWindow = document.getElementById('chatWindow');
+    chatToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      chatWindow.classList.toggle('open');
+    });
+
+    document.addEventListener('click', (e) => {
+      const isChatWindow = chatWindow.contains(e.target);
+      const isChatToggle = e.target === chatToggle;
+      if (!isChatWindow && !isChatToggle && chatWindow.classList.contains('open')) {
+        chatWindow.classList.remove('open');
+      }
+    });
+
+    const chatWindowInner = chatWindow.querySelectorAll('*');
+    chatWindowInner.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+    });
+
+    // 发送消息功能
+    const msgInput = document.getElementById('msgInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatContent = document.getElementById('chatContent');
+
+    sendBtn.addEventListener('click', function () {
+      const userMsg = msgInput.value.trim();
+      if (userMsg === '') return;
+
+      const userMsgDiv = document.createElement('div');
+      userMsgDiv.style = 'margin-bottom: 10px; text-align: right;';
+      const userMsgSpan = document.createElement('span');
+      userMsgSpan.style = 'background: #1a1a1a; color: white; padding: 8px 12px; border-radius: 15px;';
+      userMsgSpan.textContent = userMsg;
+      userMsgDiv.appendChild(userMsgSpan);
+
+      chatContent.appendChild(userMsgDiv);
+      msgInput.value = '';
+      chatContent.scrollTop = chatContent.scrollHeight;
+    });
+
+    msgInput.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        sendBtn.click();
+      }
+    });
+
+    // 同时支持电脑和手机的拖动功能
+    const chatBtn = document.getElementById('chatToggle');
+    let isDragging = false;
+    let offsetX, offsetY; // 鼠标/触摸点相对于按钮左上角的偏移量
+
+    // 电脑端鼠标事件
+    chatBtn.addEventListener('mousedown', startDrag);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', endDrag);
+
+    // 手机端触摸事件
+    chatBtn.addEventListener('touchstart', startDrag);
+    document.addEventListener('touchmove', drag);
+    document.addEventListener('touchend', endDrag);
+
+    // 开始拖动（兼容鼠标和触摸）
+    function startDrag(e) {
+      e.preventDefault(); // 阻止触摸时的默认滚动行为
+      isDragging = true;
+      chatBtn.classList.add('dragging');
+
+      // 获取按钮的位置信息
+      const rect = chatBtn.getBoundingClientRect();
+      
+      // 区分鼠标和触摸事件
+      if (e.type === 'mousedown') {
+        // 鼠标事件：获取鼠标相对于按钮的偏移量
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+      } else {
+        // 触摸事件：获取第一个触摸点相对于按钮的偏移量
+        const touch = e.touches[0];
+        offsetX = touch.clientX - rect.left;
+        offsetY = touch.clientY - rect.top;
+      }
+    }
+
+    // 拖动中（兼容鼠标和触摸）
+    function drag(e) {
+      if (!isDragging) return;
+      e.preventDefault(); // 阻止触摸时的页面滚动
+
+      let clientX, clientY;
+      // 区分鼠标和触摸事件
+      if (e.type === 'mousemove') {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      } else {
+        const touch = e.touches[0];
+        clientX = touch.clientX;
+        clientY = touch.clientY;
+      }
+
+      // 计算新位置（相对于视口）
+      const newLeft = clientX - offsetX;
+      const newTop = clientY - offsetY;
+
+      // 限制边界（不超出可视区域）
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+      const btnWidth = chatBtn.offsetWidth;
+      const btnHeight = chatBtn.offsetHeight;
+
+      // 左右边界
+      const limitedLeft = Math.max(10, Math.min(newLeft, windowWidth - btnWidth - 10));
+      // 上下边界
+      const limitedTop = Math.max(10, Math.min(newTop, windowHeight - btnHeight - 10));
+
+      // 更新位置（使用left和top定位，更直观）
+      chatBtn.style.left = `${limitedLeft}px`;
+      chatBtn.style.top = `${limitedTop}px`;
+      // 清除原来的bottom和right，避免定位冲突
+      chatBtn.style.bottom = 'auto';
+      chatBtn.style.right = 'auto';
+    }
+
+    // 结束拖动
+    function endDrag() {
+      isDragging = false;
+      chatBtn.classList.remove('dragging');
+    }
+  </script>
+</body>
+
+</html>
